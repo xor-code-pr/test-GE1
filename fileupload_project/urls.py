@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from fileupload import views as fileupload_views
 
 urlpatterns = [
+    path('', fileupload_views.index, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include('fileupload.urls')),
 ]

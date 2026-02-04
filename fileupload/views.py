@@ -9,9 +9,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .azure_storage import AzureBlobStorageService
 
 
+def index(request):
+    """Render the file upload UI."""
+    return render(request, 'fileupload/index.html')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class FileUploadView(APIView):
     """
     API endpoint for uploading files to Azure Blob Storage.
@@ -80,6 +89,7 @@ class FileUploadView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FileListView(APIView):
     """
     API endpoint for listing uploaded files.

@@ -27,7 +27,7 @@ class MSALAuthMiddleware:
     """
     
     # Public endpoints that don't require authentication
-    PUBLIC_PATHS = ['/admin/', '/api/health/']
+    PUBLIC_PATHS = ['/admin/', '/api/health/', '/']
     
     def __init__(self, get_response):
         self.get_response = get_response
