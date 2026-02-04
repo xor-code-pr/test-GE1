@@ -10,32 +10,6 @@
         "timeoutSec": 10
       }
     ],
-    "userPromptSubmitted": [
-      {
-        "type": "command",
-        "bash": "./scripts/log-prompt.sh",
-        "powershell": "./scripts/log-prompt.ps1",
-        "cwd": "scripts",
-        "env": {
-          "LOG_LEVEL": "INFO"
-        }
-      }
-    ],
-    "preToolUse": [
-      {
-        "type": "command",
-        "bash": "./scripts/security-check.sh",
-        "powershell": "./scripts/security-check.ps1",
-        "cwd": "scripts",
-        "timeoutSec": 15
-      },
-      {
-        "type": "command",
-        "bash": "./scripts/log-tool-use.sh",
-        "powershell": "./scripts/log-tool-use.ps1",
-        "cwd": "scripts"
-      }
-    ],
     "postToolUse": [
       {
         "type": "command",
