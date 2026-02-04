@@ -724,6 +724,22 @@ coverage report
 coverage html  # Generate HTML report
 ```
 
+### Test Results
+
+The project maintains **100% test success rate** with comprehensive test coverage:
+
+- ✅ **30 tests** - All passing
+- 📊 **100% coverage** - Complete coverage of core application code
+- 🔒 All authentication flows tested
+- ☁️ Azure Blob Storage integration fully tested
+- 🧪 Error handling and edge cases covered
+
+See the [screenshots directory](./screenshots/) for visual evidence of test results and code coverage reports.
+
+![Test Results](./screenshots/test_results_summary.png)
+
+![Code Coverage](./screenshots/code_coverage_report.png)
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
