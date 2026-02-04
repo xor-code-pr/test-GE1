@@ -1,0 +1,14 @@
+Name                                Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------
+fileupload/__init__.py                  0      0   100%
+fileupload/admin.py                     1      0   100%
+fileupload/apps.py                      3      0   100%
+fileupload/azure_storage.py            42      2    95%   127-128
+fileupload/middleware.py               31      2    94%   104-105
+fileupload/migrations/__init__.py       0      0   100%
+fileupload/models.py                    1      0   100%
+fileupload/tests.py                   265      0   100%
+fileupload/urls.py                      3      0   100%
+fileupload/views.py                    44      7    84%   31, 76-77, 118-124
+-----------------------------------------------------------------
+TOTAL                                 390     11    97%
