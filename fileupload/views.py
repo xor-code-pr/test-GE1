@@ -7,6 +7,7 @@ All endpoints require MSAL OAuth authentication.
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
 from .azure_storage import AzureBlobStorageService
 
@@ -21,9 +22,17 @@ class FileUploadView(APIView):
     - Uploads file to Azure Blob Storage using managed identity
     - Returns blob URL and metadata
     """
+    permission_classes = [AllowAny]  # Auth handled by middleware
     
     def post(self, request):
         """Handle file upload requests."""
+        # Check if authenticated by middleware
+        if not hasattr(request, 'token_validated') or not request.token_validated:
+            return Response({
+                'error': 'Authentication required',
+                'message': 'Valid Bearer token is required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
         # Check if file is present in request
         if 'file' not in request.FILES:
             return Response({
@@ -79,9 +88,17 @@ class FileListView(APIView):
     - Requires valid OAuth Bearer token
     - Returns list of files uploaded by the authenticated user
     """
+    permission_classes = [AllowAny]  # Auth handled by middleware
     
     def get(self, request):
         """Handle file list requests."""
+        # Check if authenticated by middleware
+        if not hasattr(request, 'token_validated') or not request.token_validated:
+            return Response({
+                'error': 'Authentication required',
+                'message': 'Valid Bearer token is required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
         # Get user info from request (set by middleware)
         user_id = getattr(request, 'user_info', {}).get('user_id', 'anonymous')
         
@@ -118,6 +135,7 @@ class HealthCheckView(APIView):
     - Returns application health status
     - Does not require authentication
     """
+    permission_classes = [AllowAny]
     
     def get(self, request):
         """Handle health check requests."""
