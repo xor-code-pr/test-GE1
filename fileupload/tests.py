@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.conf import settings
 from unittest.mock import Mock, patch, MagicMock
 import jwt
+import json
 from datetime import datetime, timedelta, timezone
 import io
 
@@ -27,7 +28,8 @@ class MSALAuthMiddlewareTests(TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.factory = RequestFactory()
-        self.get_response = Mock(return_value=JsonResponse({'success': True}))
+        # Use a simple lambda instead of Mock to avoid interference
+        self.get_response = lambda request: JsonResponse({'success': True})
         self.middleware = MSALAuthMiddleware(self.get_response)
     
     def test_public_path_allows_no_auth(self):
@@ -35,22 +37,23 @@ class MSALAuthMiddlewareTests(TestCase):
         request = self.factory.get('/api/health/')
         response = self.middleware(request)
         self.assertEqual(response.status_code, 200)
-        self.get_response.assert_called_once()
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
     
     def test_admin_path_allows_no_auth(self):
         """Test that admin paths don't require authentication."""
         request = self.factory.get('/admin/')
         response = self.middleware(request)
-        self.get_response.assert_called_once()
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(data['success'], True)
     
     def test_missing_authorization_header(self):
         """Test that missing Authorization header returns 401."""
         request = self.factory.post('/api/upload/')
         response = self.middleware(request)
         self.assertEqual(response.status_code, 401)
-        data = response.content
-        import json
-        data = json.loads(data)
+        data = json.loads(response.content)
         self.assertIn('error', data)
         self.assertEqual(data['error'], 'Missing or invalid Authorization header')
     
@@ -60,8 +63,8 @@ class MSALAuthMiddlewareTests(TestCase):
         request.META['HTTP_AUTHORIZATION'] = 'InvalidFormat token123'
         response = self.middleware(request)
         self.assertEqual(response.status_code, 401)
-        # Verify get_response was NOT called
-        self.get_response.assert_not_called()
+        data = json.loads(response.content)
+        self.assertIn('error', data)
     
     def test_valid_token_sets_user_info(self):
         """Test that valid token sets user info in request."""
@@ -78,12 +81,10 @@ class MSALAuthMiddlewareTests(TestCase):
         request = self.factory.post('/api/upload/')
         request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
         
-        # Reset mock to ensure clean state
-        self.get_response.reset_mock()
         response = self.middleware(request)
         
-        # Check that get_response was called (token validated successfully)
-        self.get_response.assert_called_once()
+        # Check that the response is successful (middleware passed through)
+        self.assertEqual(response.status_code, 200)
         
         # Check that user info was set
         self.assertTrue(hasattr(request, 'user_info'))
@@ -107,11 +108,8 @@ class MSALAuthMiddlewareTests(TestCase):
             response = self.middleware(request)
         
         self.assertEqual(response.status_code, 401)
-        import json
         data = json.loads(response.content)
         self.assertEqual(data['error'], 'Token expired')
-        # Verify get_response was NOT called
-        self.get_response.assert_not_called()
     
     def test_invalid_token_returns_401(self):
         """Test that invalid token returns 401."""
@@ -120,8 +118,8 @@ class MSALAuthMiddlewareTests(TestCase):
         
         response = self.middleware(request)
         self.assertEqual(response.status_code, 401)
-        # Verify get_response was NOT called
-        self.get_response.assert_not_called()
+        data = json.loads(response.content)
+        self.assertIn('error', data)
 
 
 class AzureBlobStorageServiceTests(TestCase):

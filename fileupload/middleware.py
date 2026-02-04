@@ -27,15 +27,15 @@ class MSALAuthMiddleware:
     """
     
     # Public endpoints that don't require authentication
-    PUBLIC_PATHS = ['/admin/', '/api/health/', '/']
+    PUBLIC_PATHS = ['/admin/', '/api/health/']
     
     def __init__(self, get_response):
         self.get_response = get_response
         self.jwks_uri = f"https://login.microsoftonline.com/{settings.MSAL_TENANT_ID}/discovery/v2.0/keys"
         
     def __call__(self, request):
-        # Skip authentication for public paths
-        if any(request.path.startswith(path) for path in self.PUBLIC_PATHS):
+        # Skip authentication for public paths (exact match for root, startswith for others)
+        if request.path == '/' or any(request.path.startswith(path) for path in self.PUBLIC_PATHS):
             return self.get_response(request)
         
         # Get authorization header
