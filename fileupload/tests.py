@@ -427,3 +427,136 @@ class HealthCheckViewTests(TestCase):
         data = response.json()
         self.assertEqual(data['status'], 'healthy')
         self.assertIn('message', data)
+
+
+class IndexViewTests(TestCase):
+    """Test cases for the index view."""
+    
+    def test_index_view_renders_template(self):
+        """Test that index view renders the correct template."""
+        client = Client()
+        response = client.get('/')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Azure File Upload')
+        self.assertContains(response, 'OAuth Bearer Token')
+
+
+class AdditionalCoverageTests(TestCase):
+    """Additional tests to achieve 100% code coverage."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.factory = RequestFactory()
+    
+    @patch('fileupload.azure_storage.BlobServiceClient')
+    @patch('fileupload.azure_storage.DefaultAzureCredential')
+    def test_list_blobs_exception_handling(self, mock_credential, mock_blob_client):
+        """Test exception handling in list_blobs."""
+        # Mock container client to raise exception
+        mock_container = MagicMock()
+        mock_container.list_blobs.side_effect = Exception('Azure connection error')
+        mock_blob_client.return_value.get_container_client.return_value = mock_container
+        
+        with self.settings(AZURE_STORAGE_ACCOUNT_NAME='testaccount'):
+            service = AzureBlobStorageService()
+            
+            with self.assertRaises(Exception) as context:
+                service.list_blobs(user_id='test-user')
+            
+            self.assertIn('Failed to list blobs', str(context.exception))
+            self.assertIn('Azure connection error', str(context.exception))
+    
+    def test_middleware_generic_exception_handling(self):
+        """Test generic exception handling in middleware."""
+        factory = RequestFactory()
+        get_response = lambda request: JsonResponse({'success': True})
+        middleware = MSALAuthMiddleware(get_response)
+        
+        request = factory.post('/api/upload/')
+        request.META['HTTP_AUTHORIZATION'] = 'Bearer invalid_token_that_causes_generic_error'
+        
+        # Mock jwt to raise a generic exception
+        with patch('fileupload.middleware.jwt.get_unverified_header', side_effect=Exception('Generic JWT error')):
+            response = middleware(request)
+        
+        self.assertEqual(response.status_code, 401)
+        data = json.loads(response.content)
+        self.assertEqual(data['error'], 'Authentication failed')
+        self.assertIn('Generic JWT error', data['message'])
+    
+    @patch('fileupload.views.AzureBlobStorageService')
+    def test_upload_generic_exception_handling(self, mock_storage_class):
+        """Test generic exception handling in upload view."""
+        # Mock storage to raise generic exception
+        mock_storage = MagicMock()
+        mock_storage.upload_file.side_effect = Exception('Unexpected upload error')
+        mock_storage_class.return_value = mock_storage
+        
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        mock_file = SimpleUploadedFile("test.txt", b"test content", content_type="text/plain")
+        
+        request = self.factory.post('/api/upload/', {'file': mock_file})
+        request.token_validated = True
+        request.user_info = {'user_id': 'test-user'}
+        request.FILES['file'] = mock_file
+        
+        view = FileUploadView()
+        response = view.post(request)
+        
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.data['error'], 'Upload failed')
+        self.assertIn('Unexpected upload error', response.data['message'])
+    
+    @patch('fileupload.views.AzureBlobStorageService')
+    def test_list_files_generic_exception_handling(self, mock_storage_class):
+        """Test generic exception handling in file list view."""
+        # Mock storage to raise generic exception
+        mock_storage = MagicMock()
+        mock_storage.list_blobs.side_effect = Exception('Unexpected list error')
+        mock_storage_class.return_value = mock_storage
+        
+        request = self.factory.get('/api/files/')
+        request.token_validated = True
+        request.user_info = {'user_id': 'test-user'}
+        
+        view = FileListView()
+        response = view.get(request)
+        
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.data['error'], 'Failed to retrieve files')
+        self.assertIn('Unexpected list error', response.data['message'])
+    
+    @patch('fileupload.views.AzureBlobStorageService')
+    def test_list_files_value_error_handling(self, mock_storage_class):
+        """Test ValueError exception handling in file list view."""
+        # Mock storage initialization to raise ValueError
+        mock_storage_class.side_effect = ValueError('Storage account not configured')
+        
+        request = self.factory.get('/api/files/')
+        request.token_validated = True
+        request.user_info = {'user_id': 'test-user'}
+        
+        view = FileListView()
+        response = view.get(request)
+        
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.data['error'], 'Configuration error')
+        self.assertIn('Storage account not configured', response.data['message'])
+    
+    @patch('fileupload.views.AzureBlobStorageService')
+    def test_upload_view_authentication_check(self, mock_storage):
+        """Test upload view's own authentication check."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        mock_file = SimpleUploadedFile("test.txt", b"test content", content_type="text/plain")
+        
+        request = self.factory.post('/api/upload/', {'file': mock_file})
+        # Don't set token_validated - this should trigger the view's auth check
+        request.FILES['file'] = mock_file
+        
+        view = FileUploadView()
+        response = view.post(request)
+        
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data['error'], 'Authentication required')
+        self.assertIn('Valid Bearer token is required', response.data['message'])
