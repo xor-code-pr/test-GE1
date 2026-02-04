@@ -3,8 +3,12 @@ MSAL OAuth Authentication Middleware
 
 This middleware validates OAuth tokens using Microsoft Authentication Library (MSAL).
 It checks for a valid Bearer token in the Authorization header and validates it.
+
+SECURITY NOTE: This demo implementation does not verify JWT signatures.
+For production use, uncomment the signature verification code in the __call__ method.
 """
 import jwt
+import json
 import requests
 from django.conf import settings
 from django.http import JsonResponse
@@ -47,16 +51,37 @@ class MSALAuthMiddleware:
         
         # Validate token
         try:
-            # In production, you would validate the token signature using JWKS
-            # For now, we decode without verification for demonstration
-            # Decode token header to get kid (key id)
+            # IMPORTANT: For production, uncomment the code below to enable proper JWT signature verification
+            # This demo code bypasses signature verification for ease of testing
+            # Production implementation should:
+            # 1. Fetch JWKS (JSON Web Key Set) from Microsoft
+            # 2. Find the correct key using 'kid' (key ID) from token header
+            # 3. Verify token signature using public key
+            # 4. Validate token claims (issuer, audience, expiry)
+            
+            # Production JWT verification example:
+            # unverified_header = jwt.get_unverified_header(token)
+            # kid = unverified_header.get('kid')
+            # response = requests.get(self.jwks_uri)
+            # jwks = response.json()
+            # public_key = None
+            # for key in jwks['keys']:
+            #     if key['kid'] == kid:
+            #         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
+            #         break
+            # if not public_key:
+            #     raise jwt.InvalidTokenError("Public key not found")
+            # claims = jwt.decode(
+            #     token,
+            #     public_key,
+            #     algorithms=['RS256'],
+            #     audience=settings.MSAL_CLIENT_ID,
+            #     issuer=f'https://login.microsoftonline.com/{settings.MSAL_TENANT_ID}/v2.0'
+            # )
+            
+            # Current demo implementation (NOT SECURE for production):
             unverified_header = jwt.get_unverified_header(token)
             unverified_claims = jwt.decode(token, options={"verify_signature": False})
-            
-            # In production environment, fetch public keys and verify signature:
-            # response = requests.get(self.jwks_uri)
-            # keys = response.json()['keys']
-            # Verify token signature using the appropriate key
             
             # Store user info in request for use in views
             request.user_info = {
