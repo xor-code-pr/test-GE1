@@ -7,7 +7,7 @@ from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
 from django.conf import settings
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class AzureBlobStorageService:
@@ -57,7 +57,7 @@ class AzureBlobStorageService:
             original_filename = filename or file.name
             file_extension = original_filename.split('.')[-1] if '.' in original_filename else ''
             unique_id = str(uuid.uuid4())
-            timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             
             # Construct blob name with user organization if provided
             if user_id:
@@ -85,7 +85,7 @@ class AzureBlobStorageService:
                 'original_filename': original_filename,
                 'size': file.size,
                 'content_type': file.content_type,
-                'uploaded_at': datetime.utcnow().isoformat()
+                'uploaded_at': datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:
