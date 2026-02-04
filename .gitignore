@@ -31,6 +31,10 @@ db.sqlite3-journal
 media/
 staticfiles/
 
+# Coverage reports
+htmlcov/
+.coverage
+
 # Environment variables
 .env
 .env.local
