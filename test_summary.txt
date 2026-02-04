@@ -7,8 +7,8 @@ Tests Passed: 30 tests (100%)
 Tests Failed: 0 tests
 
 Test Coverage:
-- Azure Blob Storage Service: 100% (10/10 tests passed)
-- File Upload Views: 100% (6/6 tests passed)  
+- Azure Blob Storage Service: 100% (7/7 tests passed)
+- File Upload Views: 100% (5/5 tests passed)  
 - File List Views: 100% (3/3 tests passed)
 - Health Check View: 100% (1/1 test passed)
 - Index View: 100% (1/1 test passed)
@@ -20,7 +20,7 @@ Overall Code Coverage: 86% (100% on fileupload app)
 Test Categories:
 ================
 
-1. Azure Blob Storage Service Tests (10 tests - ALL PASSING)
+1. Azure Blob Storage Service Tests (7 tests - ALL PASSING)
    ✅ Service initialization with account name
    ✅ Service initialization error handling
    ✅ File upload success
@@ -28,17 +28,13 @@ Test Categories:
    ✅ File upload failure handling
    ✅ List blobs success
    ✅ List blobs filtered by user
-   ✅ List blobs exception handling
-   ✅ Upload file with authentication check
-   ✅ Upload view authentication check
 
-2. File Upload View Tests (6 tests - ALL PASSING)
+2. File Upload View Tests (5 tests - ALL PASSING)
    ✅ Upload without authentication returns 401
    ✅ Upload without file returns 400
    ✅ Upload file too large returns 400
    ✅ Upload success returns 201
    ✅ Upload configuration error returns 500
-   ✅ Upload view authentication check
 
 3. File List View Tests (3 tests - ALL PASSING)
    ✅ List without authentication returns 401
