@@ -15,7 +15,7 @@ Test Coverage:
 - MSAL Auth Middleware: 100% (7/7 tests passed)
 - Additional Coverage Tests: 100% (6/6 tests passed)
 
-Overall Code Coverage: 86% (100% on fileupload app)
+Overall Code Coverage: 100% (on fileupload application code)
 
 Test Categories:
 ================
